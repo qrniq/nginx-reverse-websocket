@@ -74,19 +74,48 @@ async function takeScreenshot() {
         const {Network, Page, Runtime} = client;
         
         // Enable necessary domains
+        console.log('Enabling Chrome DevTools domains...');
         await Network.enable();
+        console.log('Network domain enabled');
         await Page.enable();
+        console.log('Page domain enabled');
         await Runtime.enable();
+        console.log('Runtime domain enabled');
         
-        console.log('Connected successfully. Navigating to https://www.example.com...');
+        console.log('Connected successfully. Navigating to https://httpbin.org/html...');
         
-        // Navigate to the target URL
-        await Page.navigate({url: 'https://www.example.com'});
+        // Navigate to a simpler, more reliable test URL
+        const navigationResult = await Page.navigate({url: 'https://httpbin.org/html'});
+        console.log('Navigation initiated, frameId:', navigationResult.frameId);
         
-        // Wait for page load
-        await Page.loadEventFired();
+        // Wait for page load with timeout and fallback
+        console.log('Waiting for page to load...');
+        try {
+            await Promise.race([
+                Page.loadEventFired(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Page load timeout')), 15000)
+                )
+            ]);
+            console.log('Page loaded successfully via loadEventFired');
+        } catch (error) {
+            console.log('loadEventFired failed or timed out, trying domContentLoaded fallback...');
+            try {
+                await Promise.race([
+                    Page.domContentLoaded(),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('DOM content loaded timeout')), 10000)
+                    )
+                ]);
+                console.log('Page loaded successfully via domContentLoaded');
+            } catch (fallbackError) {
+                console.log('Both load events failed, proceeding with fixed delay...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+        }
         
         // Wait a bit more for content to render
+        console.log('Waiting for content to render...');
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         console.log('Taking screenshot...');

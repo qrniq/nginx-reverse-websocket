@@ -25,7 +25,6 @@ exec google-chrome-stable \
     --disable-extensions \
     --disable-plugins \
     --disable-images \
-    --disable-javascript \
     --virtual-time-budget=5000 \
     --run-all-compositor-stages-before-draw \
     --disable-background-timer-throttling \

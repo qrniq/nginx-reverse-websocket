@@ -29,6 +29,13 @@ WORKDIR /app
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Generate self-signed SSL certificate
+RUN mkdir -p /etc/ssl/certs /etc/ssl/private \
+    && openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/private/nginx-selfsigned.key \
+    -out /etc/ssl/certs/nginx-selfsigned.crt \
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+
 # Copy and make start script executable
 COPY start-chrome.sh /app/start-chrome.sh
 RUN chmod +x /app/start-chrome.sh
@@ -41,7 +48,7 @@ RUN npm install
 COPY test-connection.js /app/test-connection.js
 
 # Expose ports
-EXPOSE 80 48000-49000
+EXPOSE 80 443 48000-49000
 
 # Set entrypoint
 ENTRYPOINT ["/app/start-chrome.sh"]

@@ -4,10 +4,16 @@
   "description": "Nginx reverse proxy for Chrome debugger WebSocket connections",
   "main": "test-connection.js",
   "scripts": {
-    "test": "node test-connection.js"
+    "test": "jest",
+    "test:manual": "node test-connection.js",
+    "test:verbose": "jest --verbose",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "chrome-remote-interface": "^0.33.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   },
   "keywords": [
     "nginx",
@@ -17,5 +23,14 @@
     "proxy"
   ],
   "author": "Terragon Labs",
-  "license": "MIT"
+  "license": "MIT",
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 120000,
+    "collectCoverageFrom": [
+      "test-connection.js"
+    ],
+    "coverageDirectory": "coverage",
+    "verbose": true
+  }
 }

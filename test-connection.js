@@ -6,11 +6,20 @@ async function takeScreenshot() {
     
     try {
         console.log('Connecting to Chrome via nginx proxy...');
-        
+
+        const healthCheck = await fetch('http://localhost:80/health');
+        console.log('Health check response status:', healthCheck.status);
+        if (!healthCheck.ok) {
+            throw new Error('Health check failed');
+        }
+        else {
+            console.log('Health check passed.');
+        }
+        console.log('Health check passed.');
         // Connect to Chrome through nginx proxy
         client = await CDP({
             host: 'localhost',
-            port: 80
+            port: 48333
         });
         
         const {Network, Page, Runtime} = client;
@@ -44,6 +53,8 @@ async function takeScreenshot() {
         console.log('Screenshot saved as screenshot.png');
         
     } catch (error) {
+        console.log('Failed to connect or take screenshot.');
+        console.log(error)
         console.error('Error:', error.message);
         process.exit(1);
     } finally {

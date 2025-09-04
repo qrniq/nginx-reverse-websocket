@@ -1,0 +1,21 @@
+{
+  "name": "nginx-chrome-debugger-proxy",
+  "version": "1.0.0",
+  "description": "Nginx reverse proxy for Chrome debugger WebSocket connections",
+  "main": "test-connection.js",
+  "scripts": {
+    "test": "node test-connection.js"
+  },
+  "dependencies": {
+    "chrome-remote-interface": "^0.33.0"
+  },
+  "keywords": [
+    "nginx",
+    "chrome",
+    "debugger",
+    "websocket",
+    "proxy"
+  ],
+  "author": "Terragon Labs",
+  "license": "MIT"
+}

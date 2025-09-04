@@ -1,6 +1,54 @@
 const CDP = require('chrome-remote-interface');
 const fs = require('fs');
 
+async function connectWithRetry(options, maxRetries = 5) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Connection attempt ${attempt}/${maxRetries}...`);
+            return await CDP(options);
+        } catch (error) {
+            lastError = error;
+            console.log(`Attempt ${attempt} failed:`, error.message);
+            
+            if (attempt < maxRetries) {
+                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                console.log(`Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    throw new Error(`Failed to connect after ${maxRetries} attempts. Last error: ${lastError.message}`);
+}
+
+async function waitForChromeReady(maxWaitTime = 30000) {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+        try {
+            // Check if Chrome DevTools endpoint is accessible through nginx
+            const response = await fetch('http://localhost:80/json/version', {
+                timeout: 2000
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Chrome is ready. Version:', data.Browser);
+                return true;
+            }
+        } catch (error) {
+            // Chrome not ready yet, continue waiting
+        }
+        
+        console.log('Waiting for Chrome to be ready...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    throw new Error(`Chrome not ready after ${maxWaitTime}ms`);
+}
+
 async function takeScreenshot() {
     let client;
     
@@ -12,14 +60,15 @@ async function takeScreenshot() {
         if (!healthCheck.ok) {
             throw new Error('Health check failed');
         }
-        else {
-            console.log('Health check passed.');
-        }
         console.log('Health check passed.');
-        // Connect to Chrome through nginx proxy
-        client = await CDP({
+        
+        // Wait for Chrome to be ready
+        await waitForChromeReady();
+        
+        // Connect to Chrome through nginx proxy with retry mechanism
+        client = await connectWithRetry({
             host: 'localhost',
-            port: 48333
+            port: 80
         });
         
         const {Network, Page, Runtime} = client;

@@ -1,27 +1,27 @@
-FROM ubuntu:22.04
-
-# Avoid interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
+FROM fedora:latest
 
 # Update package list and install dependencies
-RUN apt-get update && apt-get install -y \
+RUN dnf update -y && dnf install -y \
     wget \
     gnupg2 \
-    software-properties-common \
     nginx \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && dnf clean all
 
 # Add Google Chrome repository and install Chrome
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && rm -rf /var/lib/apt/lists/*
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/pki/rpm-gpg/google-chrome-key.gpg \
+    && echo "[google-chrome]" > /etc/yum.repos.d/google-chrome.repo \
+    && echo "name=google-chrome" >> /etc/yum.repos.d/google-chrome.repo \
+    && echo "baseurl=http://dl.google.com/linux/chrome/rpm/stable/x86_64" >> /etc/yum.repos.d/google-chrome.repo \
+    && echo "enabled=1" >> /etc/yum.repos.d/google-chrome.repo \
+    && echo "gpgcheck=1" >> /etc/yum.repos.d/google-chrome.repo \
+    && echo "gpgkey=file:///etc/pki/rpm-gpg/google-chrome-key.gpg" >> /etc/yum.repos.d/google-chrome.repo \
+    && dnf install -y google-chrome-stable \
+    && dnf clean all
 
 # Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
+RUN dnf install -y nodejs npm \
+    && dnf clean all
 
 # Create app directory
 WORKDIR /app
